@@ -1,0 +1,25 @@
+# IDE & OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+matrix-agent-linux
+matrix-governor-linux
+matrix-governor
+
+# Test & coverage outputs
+*.test
+*.out
+coverage.html
+
+# Local logs & scratch scripts
+*.log
+scratch/
+test_*.sh

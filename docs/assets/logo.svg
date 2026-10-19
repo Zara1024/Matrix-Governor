@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 120" width="520" height="120" fill="none">
+  <defs>
+    <!-- 背景与主体渐变 -->
+    <linearGradient id="primaryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#326CE5" />
+      <stop offset="50%" stop-color="#00ADD8" />
+      <stop offset="100%" stop-color="#00F5D4" />
+    </linearGradient>
+    <linearGradient id="accentGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7B2CBF" />
+      <stop offset="100%" stop-color="#326CE5" />
+    </linearGradient>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#E2E8F0" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- 左侧科技感矩阵蜂巢核心图标 (Matrix Shield Core) -->
+  <g transform="translate(15, 10)">
+    <!-- 外层科技光环六边形 -->
+    <polygon points="50,2 95,27 95,77 50,102 5,77 5,27" fill="url(#accentGrad)" opacity="0.25" stroke="url(#primaryGrad)" stroke-width="2" />
+    
+    <!-- 中层矩阵运算网格 -->
+    <polygon points="50,12 85,32 85,72 50,92 15,72 15,32" fill="#0D1117" stroke="url(#primaryGrad)" stroke-width="1.8" />
+    
+    <!-- 核心算力单元 (Matrix 3D 立方块) -->
+    <!-- 顶面 -->
+    <polygon points="50,28 68,39 50,50 32,39" fill="url(#primaryGrad)" opacity="0.9" />
+    <!-- 左侧面 -->
+    <polygon points="32,41 50,52 50,74 32,63" fill="#1D4ED8" opacity="0.85" />
+    <!-- 右侧面 -->
+    <polygon points="50,52 68,41 68,63 50,74" fill="#0284C7" opacity="0.85" />
+
+    <!-- 动态治理环节点 (Governor Nodes) -->
+    <circle cx="50" cy="12" r="3.5" fill="#00F5D4" filter="url(#glow)" />
+    <circle cx="85" cy="32" r="3" fill="#326CE5" />
+    <circle cx="85" cy="72" r="3" fill="#00ADD8" />
+    <circle cx="50" cy="92" r="3.5" fill="#00F5D4" filter="url(#glow)" />
+    <circle cx="15" cy="72" r="3" fill="#326CE5" />
+    <circle cx="15" cy="32" r="3" fill="#00ADD8" />
+
+    <!-- 能量连接线 -->
+    <line x1="50" y1="12" x2="50" y2="28" stroke="#00F5D4" stroke-width="1.2" stroke-dasharray="2,2" />
+    <line x1="50" y1="74" x2="50" y2="92" stroke="#00F5D4" stroke-width="1.2" stroke-dasharray="2,2" />
+  </g>
+
+  <!-- 右侧主标题与副标题 -->
+  <g transform="translate(135, 30)">
+    <!-- 主标题 Matrix-Governor -->
+    <text x="0" y="38" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif" font-size="38" font-weight="800" fill="url(#textGrad)" letter-spacing="0.5">
+      Matrix<tspan fill="url(#primaryGrad)">-Governor</tspan>
+    </text>
+    
+    <!-- 标语副标题 -->
+    <text x="2" y="62" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif" font-size="13" font-weight="500" fill="#94A3B8" letter-spacing="1.2">
+      CLOUD-NATIVE OVERSOLD &amp; FINOPS GOVERNANCE
+    </text>
+  </g>
+</svg>

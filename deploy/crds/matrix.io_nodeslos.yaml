@@ -1,0 +1,66 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: nodeslos.matrix.io
+spec:
+  group: matrix.io
+  names:
+    kind: NodeSLO
+    listKind: NodeSLOList
+    plural: nodeslos
+    singular: nodeslo
+    shortNames:
+      - nslo
+  scope: Cluster
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              properties:
+                nodeSelector:
+                  type: object
+                  additionalProperties:
+                    type: string
+                cpuWarningWatermark:
+                  type: number
+                cpuCriticalWatermark:
+                  type: number
+                enableCgroupThrottle:
+                  type: boolean
+                enableEviction:
+                  type: boolean
+                throttleRatio:
+                  type: number
+            status:
+              type: object
+              properties:
+                healthyNodes:
+                  type: integer
+                throttledNodes:
+                  type: integer
+                fusedNodes:
+                  type: integer
+      subresources:
+        status: {}
+      additionalPrinterColumns:
+        - name: Warning-Watermark
+          type: number
+          jsonPath: .spec.cpuWarningWatermark
+        - name: Critical-Watermark
+          type: number
+          jsonPath: .spec.cpuCriticalWatermark
+        - name: Throttle-Enabled
+          type: boolean
+          jsonPath: .spec.enableCgroupThrottle
+        - name: Eviction-Enabled
+          type: boolean
+          jsonPath: .spec.enableEviction
+        - name: Age
+          type: date
+          jsonPath: .metadata.creationTimestamp

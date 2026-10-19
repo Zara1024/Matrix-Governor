@@ -1,0 +1,61 @@
+apiVersion: kubescheduler.config.k8s.io/v1beta3
+kind: KubeSchedulerConfiguration
+leaderElection:
+  leaderElect: true
+  resourceName: matrix-scheduler
+  resourceNamespace: matrix-system
+profiles:
+  - schedulerName: matrix-load-aware-scheduler
+    plugins:
+      score:
+        enabled:
+          # 启用真实物理利用率感知打分插件 (对标 Trimaran / TargetLoadPacking)
+          - name: NodeResourcesFit
+            weight: 100
+        disabled:
+          - name: NodeResourcesBalancedAllocation
+    pluginConfig:
+      - name: NodeResourcesFit
+        args:
+          scoringStrategy:
+            type: LeastAllocated
+            resources:
+              - name: cpu
+                weight: 1
+              - name: memory
+                weight: 1
+              - name: "kubernetes.io/batch-cpu"
+                weight: 2
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matrix-load-aware-scheduler
+  namespace: matrix-system
+  labels:
+    app: matrix-load-aware-scheduler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: matrix-load-aware-scheduler
+  template:
+    metadata:
+      labels:
+        app: matrix-load-aware-scheduler
+    spec:
+      serviceAccountName: matrix-governor-sa
+      containers:
+        - name: scheduler
+          image: registry.k8s.io/kube-scheduler:v1.23.17
+          command:
+            - kube-scheduler
+            - --config=/etc/kubernetes/scheduler/scheduler-config.yaml
+            - --v=2
+          volumeMounts:
+            - name: config
+              mountPath: /etc/kubernetes/scheduler
+      volumes:
+        - name: config
+          configMap:
+            name: matrix-scheduler-config

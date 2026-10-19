@@ -1,0 +1,39 @@
+apiVersion: matrix.io/v1alpha1
+kind: OversoldPolicy
+metadata:
+  name: core-online-pool
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "true"
+    pool: "core-online"
+  maxCPURatio: 1.50
+  maxMemRatio: 1.20
+  targetUtilization: 0.60
+  fuseThreshold: 0.75
+  resourceModel: "Allocatable"
+---
+apiVersion: matrix.io/v1alpha1
+kind: OversoldPolicy
+metadata:
+  name: batch-offline-pool
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: "true"
+    pool: "batch-offline"
+  maxCPURatio: 2.50
+  maxMemRatio: 1.80
+  targetUtilization: 0.70
+  fuseThreshold: 0.85
+  resourceModel: "Dual"
+---
+apiVersion: matrix.io/v1alpha1
+kind: NodeSLO
+metadata:
+  name: default-node-slo
+spec:
+  nodeSelector: {}
+  cpuWarningWatermark: 0.75
+  cpuCriticalWatermark: 0.80
+  enableCgroupThrottle: true
+  enableEviction: true
+  throttleRatio: 0.20

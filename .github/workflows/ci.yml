@@ -1,0 +1,69 @@
+name: Matrix-Governor CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  lint-and-unit-test:
+    name: Lint & Unit Tests with Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Run Unit Tests with Coverage
+        run: |
+          go test -v -race -coverprofile=coverage.out -covermode=atomic ./pkg/...
+          go tool cover -func=coverage.out
+
+      - name: Verify Cross Compilation
+        run: |
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o bin/matrix-governor-linux-amd64 .
+          GOOS=linux GOARCH=arm64 CGO_ENABLED=0 go build -o bin/matrix-governor-linux-arm64 .
+
+  kind-e2e-integration:
+    name: KinD Matrix Cluster E2E Integration
+    needs: lint-and-unit-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      - name: Create KinD Cluster
+        uses: helm/kind-action@v1.8.0
+        with:
+          cluster_name: matrix-cluster-ci
+          config: deploy/kind-config.yaml
+
+      - name: Build and Load Docker Image
+        run: |
+          GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o matrix-governor .
+          docker build -t matrix-governor:ci .
+          kind load docker-image matrix-governor:ci --name matrix-cluster-ci
+
+      - name: Apply CRDs and Deploy Matrix-Governor
+        run: |
+          kubectl apply -f deploy/crds/
+          kubectl create namespace matrix-system || true
+          kubectl apply -f deploy/matrix-governor.yaml
+          kubectl rollout status deployment/matrix-governor -n matrix-system --timeout=120s
+
+      - name: Run E2E Oversold & Metrics Verification
+        run: |
+          kubectl label node matrix-cluster-ci-control-plane oversold=oversold --overwrite
+          sleep 10
+          kubectl get nodes -o wide
+          kubectl get pdb -A

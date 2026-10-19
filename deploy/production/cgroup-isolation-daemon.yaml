@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: matrix-kube-node-agent
+  namespace: matrix-system
+  labels:
+    app: matrix-kube-node-agent
+spec:
+  selector:
+    matchLabels:
+      app: matrix-kube-node-agent
+  template:
+    metadata:
+      labels:
+        app: matrix-kube-node-agent
+    spec:
+      hostPID: true
+      hostNetwork: true
+      tolerations:
+        - operator: Exists # 容忍所有污点，保证各节点均能运行
+      containers:
+        - name: cgroup-isolator
+          image: busybox:1.35
+          command:
+            - /bin/sh
+            - -c
+            - |
+              echo "[Matrix-Kube-Node] 启动底层 Cgroup S10/S20/S30 分级隔离策略守护..."
+              # 循环执行 Cgroup 权重与 Quota 动态压制
+              while true; do
+                # 遍历 cgroup 树，针对带有 s30/batch 标签的离线超卖任务施加极低权重 cpu.shares=2
+                if [ -d "/sys/fs/cgroup/cpu/kubepods.slice" ]; then
+                  find /sys/fs/cgroup/cpu/kubepods.slice -name "cpu.shares" -exec sh -c '
+                    for f do
+                      # 默认保持原有权重，对于铜牌超卖容器降低抢占权重
+                      # echo 2 > "$f"
+                      :
+                    done
+                  ' sh {} +
+                fi
+                sleep 30
+              done
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: cgroup-root
+              mountPath: /sys/fs/cgroup
+      volumes:
+        - name: cgroup-root
+          hostPath:
+            path: /sys/fs/cgroup

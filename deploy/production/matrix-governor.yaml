@@ -1,0 +1,123 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: matrix-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: matrix-governor-sa
+  namespace: matrix-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: matrix-governor-role
+rules:
+  - apiGroups: [""]
+    resources: ["nodes", "nodes/status"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: [""]
+    resources: ["pods", "pods/status", "pods/eviction"]
+    verbs: ["get", "list", "watch", "create", "delete"]
+  - apiGroups: ["policy"]
+    resources: ["poddisruptionbudgets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: matrix-governor-binding
+subjects:
+  - kind: ServiceAccount
+    name: matrix-governor-sa
+    namespace: matrix-system
+roleRef:
+  kind: ClusterRole
+  name: matrix-governor-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: matrix-governor-svc
+  namespace: matrix-system
+  labels:
+    app: matrix-governor
+spec:
+  ports:
+    - name: https
+      port: 443
+      targetPort: 8443
+  selector:
+    app: matrix-governor
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matrix-governor
+  namespace: matrix-system
+  labels:
+    app: matrix-governor
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: matrix-governor
+  template:
+    metadata:
+      labels:
+        app: matrix-governor
+    spec:
+      serviceAccountName: matrix-governor-sa
+      containers:
+        - name: governor
+          image: matrix-governor:v1.2.0
+          command:
+            - /matrix-governor
+          args:
+            - --listen=:8443
+            - --cert=/etc/webhook/certs/tls.crt
+            - --key=/etc/webhook/certs/tls.key
+            - --zap-level=info
+          ports:
+            - containerPort: 8443
+              name: https
+          resources:
+            requests:
+              cpu: 200m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          volumeMounts:
+            - name: certs
+              mountPath: /etc/webhook/certs
+              readOnly: true
+      volumes:
+        - name: certs
+          secret:
+            secretName: matrix-governor-tls
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: matrix-governor-mutating-webhook
+webhooks:
+  - name: oversold.matrix-governor.io
+    rules:
+      - apiGroups: [""]
+        apiVersions: ["v1"]
+        operations: ["CREATE", "UPDATE"]
+        resources: ["nodes/status"]
+        scope: "*"
+    clientConfig:
+      service:
+        name: matrix-governor-svc
+        namespace: matrix-system
+        path: /mutating/oversold
+      caBundle: ${CA_BUNDLE}
+    admissionReviewVersions: ["v1", "v1beta1"]
+    sideEffects: None
+    timeoutSeconds: 5
+    failurePolicy: Ignore # 故障静默兜底，绝不阻断正常节点心跳

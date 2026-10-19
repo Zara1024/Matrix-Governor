@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: matrix-agent
+  namespace: matrix-system
+  labels:
+    app: matrix-agent
+spec:
+  selector:
+    matchLabels:
+      app: matrix-agent
+  template:
+    metadata:
+      labels:
+        app: matrix-agent
+    spec:
+      serviceAccountName: matrix-governor-sa
+      hostPID: true
+      hostNetwork: true
+      containers:
+        - name: agent
+          image: matrix-governor:v2.0.0-enterprise
+          command:
+            - /matrix-agent
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: sys
+              mountPath: /sys
+              readOnly: false
+            - name: cgroup
+              mountPath: /sys/fs/cgroup
+              readOnly: false
+      volumes:
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup

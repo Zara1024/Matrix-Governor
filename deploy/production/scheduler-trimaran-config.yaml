@@ -1,0 +1,25 @@
+apiVersion: kubescheduler.config.k8s.io/v1beta2
+kind: KubeSchedulerConfiguration
+leaderElection:
+  leaderElect: true
+clientConnection:
+  kubeconfig: "/etc/kubernetes/scheduler.conf"
+profiles:
+  - schedulerName: matrix-dw-scheduler
+    plugins:
+      score:
+        disabled:
+          - name: NodeResourcesBalancedAllocation
+          - name: NodeResourcesLeastAllocated
+        enabled:
+          - name: TargetLoadPacking
+    pluginConfig:
+      - name: TargetLoadPacking
+        args:
+          # 设定目标利用率 65%，与 PID 控制器 Target 保持一致
+          targetUtilization: 65
+          defaultRequestsMultiplier: "1"
+          watcherAddress: "http://prometheus-k8s.monitoring.svc:9090"
+          metricProvider:
+            type: Prometheus
+            address: "http://prometheus-k8s.monitoring.svc:9090"

@@ -1,0 +1,137 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 6, "w": 6, "x": 0, "y": 0 },
+      "id": 101,
+      "title": "💰 累计节省云资源成本 (RMB)",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "matrix_governor_finops_total_accumulated_savings_rmb",
+          "legendFormat": "累计节省金额 (元)",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "blue", "value": 100 }
+            ]
+          },
+          "unit": "currencyCNY"
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 6, "w": 6, "x": 6, "y": 0 },
+      "id": 102,
+      "title": "⚡ 动态超卖释放额外算力",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "sum(matrix_governor_finops_saved_cpu_cores)",
+          "legendFormat": "额外创造算力核数",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "orange", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "short"
+        }
+      }
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 6, "w": 6, "x": 12, "y": 0 },
+      "id": 1,
+      "title": "当前纳管受测节点数",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "count(count by (node) (matrix_governor_node_oversold_ratio))",
+          "legendFormat": "节点总数",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 6, "w": 6, "x": 18, "y": 0 },
+      "id": 2,
+      "title": "全集群平均动态超卖比",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "avg(matrix_governor_node_oversold_ratio{resource=\"cpu\"})",
+          "legendFormat": "平均超卖倍数",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 6 },
+      "id": 5,
+      "title": "各节点物理使用率 vs 动态超卖比时序曲线 (PID 闭环观测)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "matrix_governor_node_actual_utilization{resource=\"cpu\"} * 100",
+          "legendFormat": "{{node}} 物理CPU利用率 (%)",
+          "refId": "A"
+        },
+        {
+          "expr": "matrix_governor_node_oversold_ratio{resource=\"cpu\"}",
+          "legendFormat": "{{node}} CPU超卖比 (x)",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 6 },
+      "id": 6,
+      "title": "FinOps 预计每小时节约资金时序 (RMB/h)",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "matrix_governor_finops_hourly_savings_rmb",
+          "legendFormat": "{{node}} 每小时节省 (元/时)",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["kubernetes", "matrix-governor", "finops", "oversold"],
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "title": "Matrix-Governor Kubernetes 企业级动态超卖与 FinOps 降本增效大盘",
+  "uid": "matrix-governor-finops-v2"
+}

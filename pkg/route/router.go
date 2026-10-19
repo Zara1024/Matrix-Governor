@@ -11,10 +11,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mritd/goadmission/pkg/eviction"
-	"github.com/mritd/goadmission/pkg/metrics"
-	"github.com/mritd/goadmission/pkg/nodemanager"
-	"github.com/mritd/goadmission/pkg/zaplogger"
+	"github.com/Zara1024/Matrix-Governor/pkg/eviction"
+	"github.com/Zara1024/Matrix-Governor/pkg/metrics"
+	"github.com/Zara1024/Matrix-Governor/pkg/nodemanager"
+	"github.com/Zara1024/Matrix-Governor/pkg/zaplogger"
 	"go.uber.org/zap"
 
 	"github.com/gorilla/mux"

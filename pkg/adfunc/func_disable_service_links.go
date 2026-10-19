@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mritd/goadmission/pkg/conf"
+	"github.com/Zara1024/Matrix-Governor/pkg/conf"
 
 	appsv1 "k8s.io/api/apps/v1"
 
@@ -60,7 +60,7 @@ func disableServiceLinks(request *admissionv1.AdmissionRequest) (*admissionv1.Ad
 				Option: PatchOptionAdd,
 				Path:   "/metadata/annotations",
 				Value: map[string]string{
-					fmt.Sprintf("disable-service-links-mutatingwebhook-%d.mritd.me", time.Now().Unix()): "true",
+					fmt.Sprintf("disable-service-links-mutatingwebhook-%d.matrix-governor.io", time.Now().Unix()): "true",
 				},
 			},
 			{

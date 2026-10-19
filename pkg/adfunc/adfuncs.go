@@ -9,12 +9,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/mritd/goadmission/pkg/zaplogger"
+	"github.com/Zara1024/Matrix-Governor/pkg/zaplogger"
 
 	"go.uber.org/zap"
 	"k8s.io/apimachinery/pkg/runtime/serializer"
 
-	"github.com/mritd/goadmission/pkg/route"
+	"github.com/Zara1024/Matrix-Governor/pkg/route"
 
 	admissionv1 "k8s.io/api/admission/v1"
 	"k8s.io/apimachinery/pkg/runtime"

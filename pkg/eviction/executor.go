@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mritd/goadmission/pkg/metrics"
+	"github.com/Zara1024/Matrix-Governor/pkg/metrics"
 	policyv1beta1 "k8s.io/api/policy/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"

@@ -1,7 +1,7 @@
 FROM golang:1.16-alpine AS builder
 
 ENV GO111MODULE on
-ENV SRC_PATH ${GOPATH}/src/github.com/mritd/goadmission
+ENV SRC_PATH ${GOPATH}/src/github.com/Zara1024/Matrix-Governor
 
 WORKDIR ${SRC_PATH}
 
@@ -32,8 +32,8 @@ RUN set -ex \
     && echo ${TZ} > /etc/timezone \
     && rm -rf /var/cache/apk/*
 
-COPY --from=builder /go/bin/goadmission /goadmission
+COPY --from=builder /go/bin/Matrix-Governor /matrix-governor
 
-ENTRYPOINT ["/goadmission"]
+ENTRYPOINT ["/matrix-governor"]
 
 CMD ["--help"]

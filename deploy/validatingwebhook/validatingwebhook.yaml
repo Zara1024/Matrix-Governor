@@ -1,9 +1,9 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: "validating-webhook.mritd.me"
+  name: "validating-webhook.matrix-governor.io"
 webhooks:
-  - name: "validating-webhook.mritd.me"
+  - name: "validating-webhook.matrix-governor.io"
     rules:
       - apiGroups:   ["apps"]
         apiVersions: ["v1"]

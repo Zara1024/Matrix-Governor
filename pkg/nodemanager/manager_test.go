@@ -2,9 +2,10 @@ package nodemanager
 
 import (
 	"testing"
+	"time"
 
-	"github.com/mritd/goadmission/pkg/metrics"
-	"github.com/mritd/goadmission/pkg/pid"
+	"github.com/Zara1024/Matrix-Governor/pkg/metrics"
+	"github.com/Zara1024/Matrix-Governor/pkg/pid"
 )
 
 func TestNodeManager_Lifecycle_And_Fuse(t *testing.T) {
@@ -39,7 +40,8 @@ func TestNodeManager_Lifecycle_And_Fuse(t *testing.T) {
 	}
 	t.Logf("85%% 突发负载下成功熔断！超卖比已紧急归位为 1.0！")
 
-	// 4. 模拟负载回落至 40% (恢复安全区)
+	// 4. 模拟负载回落至 40% (等待 45s 冷却期过后自愈恢复)
+	info.FusedUntil = time.Now().Add(-1 * time.Second)
 	mgr.UpdateNodeMetrics(nodeName, 0.40, 0.40)
 	cpuRatioRecover, _, isFusedRecover := mgr.GetDynamicRatio(nodeName)
 	if isFusedRecover {

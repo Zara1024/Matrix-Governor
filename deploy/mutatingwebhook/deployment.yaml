@@ -17,8 +17,8 @@ spec:
     spec:
       serviceAccountName: mutating-webhook
       containers:
-        - name: goadmission
-          image: mritd/goadmission
+        - name: matrix-governor
+          image: zara1024/matrix-governor
           imagePullPolicy: Always
           args:
             - --cert=/etc/kubernetes/ssl/dac.pem

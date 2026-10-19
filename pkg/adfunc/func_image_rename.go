@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mritd/goadmission/pkg/conf"
+	"github.com/Zara1024/Matrix-Governor/pkg/conf"
 
 	jsoniter "github.com/json-iterator/go"
 
@@ -87,7 +87,7 @@ func rename(request *admissionv1.AdmissionRequest) (*admissionv1.AdmissionRespon
 						Option: PatchOptionAdd,
 						Path:   "/metadata/annotations",
 						Value: map[string]string{
-							fmt.Sprintf("rename-mutatingwebhook-%d.mritd.me", time.Now().Unix()): fmt.Sprintf("%d-%s-%s", i, strings.ReplaceAll(s, "/", "_"), strings.ReplaceAll(t, "/", "_")),
+							fmt.Sprintf("rename-mutatingwebhook-%d.matrix-governor.io", time.Now().Unix()): fmt.Sprintf("%d-%s-%s", i, strings.ReplaceAll(s, "/", "_"), strings.ReplaceAll(t, "/", "_")),
 						},
 					})
 					break

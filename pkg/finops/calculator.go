@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mritd/goadmission/pkg/metrics"
+	"github.com/Zara1024/Matrix-Governor/pkg/metrics"
 )
 
 // Config FinOps 财务成本核算配置

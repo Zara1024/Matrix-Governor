@@ -11,9 +11,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mritd/goadmission/pkg/cgroup"
-	"github.com/mritd/goadmission/pkg/hardware"
-	"github.com/mritd/goadmission/pkg/kernel"
+	"github.com/Zara1024/Matrix-Governor/pkg/cgroup"
+	"github.com/Zara1024/Matrix-Governor/pkg/hardware"
+	"github.com/Zara1024/Matrix-Governor/pkg/kernel"
 	"k8s.io/klog/v2"
 )
 

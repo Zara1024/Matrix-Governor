@@ -1,10 +1,10 @@
-import paramiko
 import sys
 
+from ssh_conf import connect
+
+
 def run(cmd):
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect("REDACTED_HOST", port=22, username="root", password="REDACTED_PASSWORD")
+    ssh = connect()
     stdin, stdout, stderr = ssh.exec_command(cmd)
     out = stdout.read().decode('utf-8', errors='replace')
     err = stderr.read().decode('utf-8', errors='replace')
@@ -14,6 +14,7 @@ def run(cmd):
         print("=== STDERR ===")
         print(err)
     ssh.close()
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

@@ -1,9 +1,9 @@
-import paramiko
+import os
 
-print("开始连接远程主机 REDACTED_HOST...")
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect("REDACTED_HOST", port=22, username="root", password="REDACTED_PASSWORD")
+from ssh_conf import connect
+
+print("开始连接远程主机 %s..." % os.environ.get("MATRIX_TEST_HOST", "?"))
+ssh = connect()
 
 sftp = ssh.open_sftp()
 print("正在上传最新的 matrix-governor-linux (带熔断保持期与即时API回退机制)...")

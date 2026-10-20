@@ -23,3 +23,9 @@ coverage.html
 *.log
 scratch/
 test_*.sh
+
+# Python bytecode & local env (never commit real credentials)
+__pycache__/
+*.pyc
+.env
+scripts/tests/.env

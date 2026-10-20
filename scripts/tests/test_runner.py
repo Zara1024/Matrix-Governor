@@ -1,8 +1,6 @@
-import paramiko
+from ssh_conf import connect
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect("REDACTED_HOST", port=22, username="root", password="REDACTED_PASSWORD")
+ssh = connect()
 
 cmd = """
 echo "=== 1. 向控制器端点上报节点过载 (88% CPU) ==="

@@ -1,9 +1,6 @@
-import paramiko
-import time
+from ssh_conf import connect
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect("REDACTED_HOST", port=22, username="root", password="REDACTED_PASSWORD")
+ssh = connect()
 
 cmd = """
 echo "=== 1. 清理 default 命名空间测试负载与残留进程 ==="

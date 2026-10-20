@@ -36,7 +36,7 @@ func (k *KernelQoSController) ConfigurePodKernelQoS(podUID, qosClass string, mem
 	if qosClass == "Guaranteed" || qosClass == "LSR" {
 		// 在线高保应用：享有最高 IO 权重、10ms 内核纳秒级抢占加速、无异步回收压制
 		setting.IOWeight = 1000
-		setting.BVTPreemptWarp = 10000000 // 10ms 调度加速
+		setting.BVTPreemptWarp = 10000000                             // 10ms 调度加速
 		setting.MemoryLowBytes = int64(float64(memLimitBytes) * 0.85) // 保留 85% 绝对不可回收内存
 		setting.MemoryHighBytes = memLimitBytes
 	} else {

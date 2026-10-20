@@ -19,28 +19,39 @@ import (
 
 // Config 单机 Agent 配置
 type Config struct {
-	NodeName           string
-	SyncInterval       time.Duration
+	NodeName            string
+	SyncInterval        time.Duration
 	CPUWarningThreshold float64
-	EnableRDT          bool
-	EnableKernelQoS    bool
+	EnableRDT           bool
+	EnableKernelQoS     bool
+	// CgroupRoot 为空时使用 /sys/fs/cgroup
+	CgroupRoot string
+	// Driver 是 kubelet 的 cgroup 驱动方式，决定 Pod cgroup 路径形态
+	Driver kernel.Driver
 }
 
 // MatrixAgent 单机自治守护 Agent (对标 Koord-let / Katalyst-Agent)
 type MatrixAgent struct {
 	mu         sync.RWMutex
 	config     Config
+	exec       *kernel.Executor
 	suppressor *cgroup.Suppressor
 	rdtMgr     *hardware.RDTManager
 	kernelQoS  *kernel.KernelQoSController
 	stopCh     chan struct{}
+	ticks      uint64
 }
 
 // NewMatrixAgent 创建单机 Agent
 func NewMatrixAgent(cfg Config) *MatrixAgent {
+	if cfg.Driver == "" {
+		cfg.Driver = kernel.DriverSystemd
+	}
+	exec := kernel.NewExecutor(cfg.CgroupRoot)
 	return &MatrixAgent{
 		config:     cfg,
-		suppressor: cgroup.NewSuppressor(0.20),
+		exec:       exec,
+		suppressor: cgroup.NewSuppressorWithExecutor(0.20, exec),
 		rdtMgr:     hardware.NewRDTManager(hardware.DefaultRDTConfig()),
 		kernelQoS:  kernel.NewKernelQoSController(),
 		stopCh:     make(chan struct{}),
@@ -50,7 +61,12 @@ func NewMatrixAgent(cfg Config) *MatrixAgent {
 // Start 启动单机高频高精度自治控制闭环
 func (a *MatrixAgent) Start(ctx context.Context) {
 	ticker := time.NewTicker(a.config.SyncInterval)
-	klog.Infof("[MatrixAgent] 单机自治保护 Agent 已成功启动在节点: %s (巡检周期: %v)", a.config.NodeName, a.config.SyncInterval)
+	klog.Infof("[MatrixAgent] 单机自治保护 Agent 已启动在节点: %s (巡检周期: %v)", a.config.NodeName, a.config.SyncInterval)
+	klog.Infof("[MatrixAgent] 内核写入通道: cgroup %s, 驱动 %s, resctrl 可用=%v",
+		a.exec.Version(), a.config.Driver, a.rdtMgr.Supported())
+	if !a.rdtMgr.Supported() {
+		klog.Infof("[MatrixAgent] RDT 降级: %s", a.rdtMgr.UnsupportedReason())
+	}
 
 	go func() {
 		for {
@@ -65,8 +81,11 @@ func (a *MatrixAgent) Start(ctx context.Context) {
 	}()
 }
 
-// Stop 停止 Agent
+// Stop 停止 Agent。
+// 必须先把被压制的 Pod 恢复到原始配额：kubelet 只在容器重建时才重算 cgroup 配置，
+// Agent 退出时如果不还原，Pod 会一直卡在 20% 配额上，且没人会去修正。
 func (a *MatrixAgent) Stop() {
+	a.suppressor.RestoreAll()
 	close(a.stopCh)
 }
 
@@ -157,16 +176,32 @@ func (a *MatrixAgent) reconcileLocalNode() {
 			a.config.NodeName, currentLocalCPU*100)
 	}
 
+	// 每 15 个巡检周期（默认 30 秒）与内核对齐一次账本：
+	// kubelet 重启、Pod 重建、手工改过 cgroup 都会让内存账本失真，
+	// 只有重新扫一遍内核才知道真实配额是多少。
+	a.ticks++
+	if a.ticks%15 == 1 {
+		a.suppressor.SyncFromCgroup(a.exec)
+	}
+
 	a.suppressor.ReconcileByWatermark(currentLocalCPU)
 }
 
-// HandlePodCreated 当单机感知到新容器创建时，执行单机硬件分配与内核 QoS 赋权
+// HandlePodCreated 当单机感知到新容器创建时，执行单机硬件分配与内核 QoS 赋权。
 func (a *MatrixAgent) HandlePodCreated(podUID, qosClass string, memLimitBytes int64) {
+	a.HandlePodCreatedWithPID(podUID, qosClass, memLimitBytes, 0)
+}
+
+// HandlePodCreatedWithPID 是带进程号的版本，能把容器主进程真正放进 RDT CLOS 组。
+func (a *MatrixAgent) HandlePodCreatedWithPID(podUID, qosClass string, memLimitBytes int64, pid int) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
 	if a.config.EnableRDT {
-		a.rdtMgr.AssignCLOS(podUID, qosClass)
+		if _, err := a.rdtMgr.ApplyForPod(podUID, qosClass, pid); err != nil {
+			// RDT 属于增强项：拿不到 resctrl 就降级，不能阻塞主流程
+			klog.V(2).Infof("[MatrixAgent] Pod %s RDT 分配跳过: %v", podUID, err)
+		}
 	}
 	if a.config.EnableKernelQoS {
 		a.kernelQoS.ConfigurePodKernelQoS(podUID, qosClass, memLimitBytes)

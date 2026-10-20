@@ -167,6 +167,36 @@ Matrix-Governor 采用清晰的“中央智能编排 + 单机数据面自治”�
 
 ---
 
+### 节点内核写入层自检（`cmd/nodecheck`）
+
+上表 TC-10 的绑核动作，早期版本是由测试脚本手工执行 `taskset -cp` 完成的，组件本身并没有真正写 cgroup。当前版本已补齐节点侧内核写入层（`pkg/kernel`），由组件自己写入，并提供独立自检工具验证：
+
+```bash
+GOOS=linux GOARCH=amd64 go build -o nodecheck ./cmd/nodecheck
+sudo ./nodecheck -mode all
+```
+
+自检环境：Ubuntu 22.04 / Linux 5.15 / cgroup v2 / 4 vCPU（单 NUMA 节点、无 resctrl）
+
+| 检查项 | 实测结果 |
+| :--- | :--- |
+| cgroup 版本探测 | `v2` |
+| 写入 `cpuset.cpus` | `2-3` 写入成功并读回一致 |
+| **绑核真实生效** | `/proc/<pid>/status` 的 `Cpus_allowed_list=2-3` |
+| 写入 `cpu.max` | `20000 100000` |
+| 幂等写入 | 第二次写相同值 `changed=false`，不产生磁盘写入 |
+| cpuset 语义比较 | 写入 `"2,3"` 判定为未变更（内核已规范化为 `"2-3"`） |
+| **内核真实节流** | CPU 压力下 `cpu.stat` 的 `nr_throttled` 0 → 15 |
+| kubelet 路径拼接 | `kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod<uid>.slice/cri-containerd-<cid>.scope` |
+| 从内核发现 Pod 分组 | 纳管 2 个（账本来源为 `cpu.max` 实际值，非内存推测） |
+| 水位 80% 压制 | BestEffort Pod 配额 50000 → 10000，Guaranteed 保持 100000 |
+| 水位 50% 恢复 | 配额回到 50000 |
+| 退出前 `RestoreAll` | Agent 收到 SIGTERM 时还原被压制配额 |
+
+**已知边界（诚实标注）**：该自检机为单 NUMA 节点，`pkg/hardware/numa.go` 的跨 Socket 分配只由单元测试覆盖；机器无 resctrl（AMD 平台且未挂载），`pkg/hardware/rdt.go` 的 `schemata`/`tasks` 写入只由单元测试覆盖，真机验证需 Intel Xeon Scalable（具备 `cat_l3` + `mba` 两个 CPU flag）。
+
+---
+
 ## 🚀 快速开始 (Quick Start)
 
 ### 1. 先决条件 (Prerequisites)
